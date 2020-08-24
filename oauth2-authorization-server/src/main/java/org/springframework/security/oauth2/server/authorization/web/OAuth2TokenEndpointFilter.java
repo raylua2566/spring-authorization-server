@@ -36,6 +36,7 @@ import org.springframework.security.oauth2.server.authorization.OAuth2Authorizat
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AccessTokenAuthenticationToken;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationCodeAuthenticationToken;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientCredentialsAuthenticationToken;
+import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ResourceOwnerPasswordAuthenticationToken;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.util.Assert;
@@ -127,6 +128,7 @@ public class OAuth2TokenEndpointFilter extends OncePerRequestFilter {
 		Map<AuthorizationGrantType, Converter<HttpServletRequest, Authentication>> converters = new HashMap<>();
 		converters.put(AuthorizationGrantType.AUTHORIZATION_CODE, new AuthorizationCodeAuthenticationConverter());
 		converters.put(AuthorizationGrantType.CLIENT_CREDENTIALS, new ClientCredentialsAuthenticationConverter());
+		converters.put(AuthorizationGrantType.PASSWORD, new ResourceOwnerPasswordCredentialsAuthenticationConverter());
 		this.authorizationGrantAuthenticationConverter = new DelegatingAuthorizationGrantAuthenticationConverter(converters);
 	}
 
@@ -256,6 +258,27 @@ public class OAuth2TokenEndpointFilter extends OncePerRequestFilter {
 			}
 
 			return new OAuth2ClientCredentialsAuthenticationToken(clientPrincipal);
+		}
+	}
+
+	// Add by RayLau 20200824
+	private static class ResourceOwnerPasswordCredentialsAuthenticationConverter implements Converter<HttpServletRequest, Authentication> {
+
+		@Override
+		public Authentication convert(HttpServletRequest request) {
+			// grant_type (REQUIRED)
+			String grantType = request.getParameter(OAuth2ParameterNames.GRANT_TYPE);
+			if (!AuthorizationGrantType.PASSWORD.getValue().equals(grantType)) {
+				return null;
+			}
+			Authentication clientPrincipal = SecurityContextHolder.getContext().getAuthentication();
+			MultiValueMap<String, String> parameters = OAuth2EndpointUtils.getParameters(request);
+
+			final String userName = parameters.getFirst("user_name");
+			final String password = parameters.getFirst("password");
+
+
+			return new OAuth2ResourceOwnerPasswordAuthenticationToken(clientPrincipal, userName, password);
 		}
 	}
 }

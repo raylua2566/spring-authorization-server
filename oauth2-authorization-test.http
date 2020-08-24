@@ -1,0 +1,16 @@
+GET http://localhost:9000/oauth2/authorize?client_id=messaging-client
+Authorization: Basic bWVzc2FnaW5nLWNsaWVudDpzZWNyZXQ=
+
+###
+POST http://localhost:9000/oauth2/token
+Authorization: Basic bWVzc2FnaW5nLWNsaWVudDpzZWNyZXQ=
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&user_name=user1&password=password
+
+###
+POST http://localhost:9000/oauth2/token
+Authorization: Basic bWVzc2FnaW5nLWNsaWVudDpzZWNyZXQ=
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials
